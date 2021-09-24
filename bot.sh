@@ -1,14 +1,12 @@
-#start the bot with a token variable declared already
-
 if [ "$token" == "" ]
 then
   echo "You did not specify the token"
   exit 1
 fi
 
-if [ "$1" != "--abobus" ]
+if [ "$1" != "abobus" ]
 then
-  bash "$0" --abobus
+  bash "$0" abobus
   bash lib/end.sh
   exit
 fi
@@ -88,5 +86,3 @@ do
     fi
   fi
 done
-
-#end
