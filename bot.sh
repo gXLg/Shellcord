@@ -6,8 +6,7 @@ fi
 
 if [ "$1" != "abobus" ]
 then
-  bash "$0" abobus
-  bash lib/end.sh
+  bash "$0" abobus && bash lib/end.sh
   exit
 fi
 source lib/import.sh
@@ -17,7 +16,12 @@ bot "$token"
 echo "logged in, probably"
 while true
 do
-  receive
+  event="$(cat pipe/event)"
+  if [ "$event" == "end" ]
+  then
+    broken=true
+    break
+  fi
   type="$(echo $event | jq -r .t)"
   if [ "$type" == "MESSAGE_CREATE" ]
   then

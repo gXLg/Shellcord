@@ -47,7 +47,12 @@ bot() {
     echo -e "ERROR: Some of the websockets exist, that may be because "\
   "an instance is running already or the programm did not clean up the file\n"\
   "If the last, you may delete the file but proceed with caution"
-    exit
+    exit 1
+  fi
+  if [ -f "pipe/payload" ] || [ -f "pipe/event" ]
+  then
+    echo -e "ERROR: Some of the websockets exist as a file, clean the pipe directory"
+    exit 1
   fi
   mkfifo pipe/payload
   mkfifo pipe/event
@@ -76,13 +81,4 @@ bot() {
 
 payload() {
   echo $1 > pipe/payload
-}
-
-receive() {
-  event="$(cat pipe/event)"
-  if [ "$event" == "end" ]
-  then
-    broken=true
-    break
-  fi
 }

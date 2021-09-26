@@ -14,6 +14,7 @@ def pay ( ws ) :
   while True :
     with open ( pinp, "r" ) as p :
       payload = p.read ( )
+    print("iows.py | I received a payload:", payload )
     if payload == "end\n" :
       ws.send ( '{"op":1,"d":null}' )
       trigger = True
@@ -30,6 +31,7 @@ s.start ( )
 while True :
   try :
     event = ws.recv ( )
+    print("iows.py | I am sending an event:", event )
     with open ( pout, "w" ) as p :
       p.write ( event )
   except : break
@@ -40,6 +42,7 @@ while True :
 ws.close ( 1000 )
 while True :
   try :
+    print("iows.py | I am sending an event: end" )
     with open ( pout, "w" ) as p :
       p.write ( "end" )
       break
