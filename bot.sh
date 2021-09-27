@@ -16,12 +16,8 @@ bot "$token"
 echo "logged in, probably"
 while true
 do
-  event="$(cat pipe/event)"
-  if [ "$event" == "end" ]
-  then
-    broken=true
-    break
-  fi
+  receive
+  if $(cat pipe/broken); then break; fi
   type="$(echo $event | jq -r .t)"
   if [ "$type" == "MESSAGE_CREATE" ]
   then

@@ -82,3 +82,13 @@ bot() {
 payload() {
   echo $1 > pipe/payload
 }
+
+receive() {
+  event="$(cat pipe/event)"
+  if [ "$event" == "end" ]
+  then
+    echo true > pipe/broken
+  else
+    echo false > pipe/broken
+  fi
+}
