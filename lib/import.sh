@@ -58,7 +58,14 @@ bot() {
   mkfifo pipe/event
   python lib/wsio.py "wss://gateway.discord.gg/?v=6&encoding=json" pipe/payload pipe/event &
 
-  interval=$(cat pipe/event | jq .d.heartbeat_interval )
+  event=$(cat pipe/event)
+  if [ "$event" == "end" ]
+  then
+    rm pipe/payload
+    rm pipe/event
+    exit 1
+  fi
+  interval=$(echo $event | jq .d.heartbeat_interval )
   interval=$(echo "scale=2; $interval / 1000" | bc )
 
   (while true

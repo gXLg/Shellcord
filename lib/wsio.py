@@ -1,10 +1,12 @@
 from threading import Thread
 from websocket import WebSocket
 from sys import argv
+from os import environ
 
 host = argv [ 1 ]
 pinp = argv [ 2 ]
 pout = argv [ 3 ]
+debug = environ [ "debug" ] == "true"
 
 global trigger
 trigger = False
@@ -14,7 +16,7 @@ def pay ( ws ) :
   while True :
     with open ( pinp, "r" ) as p :
       payload = p.read ( )
-    print("iows.py | I received a payload:", payload )
+    if debug : print ( "wsio.py | I received a payload:", payload )
     if payload == "end\n" :
       ws.send ( '{"op":1,"d":null}' )
       trigger = True
@@ -23,7 +25,13 @@ def pay ( ws ) :
       ws.send ( payload )
 
 ws = WebSocket ( )
-ws.connect ( host )
+try :
+  ws.connect ( host )
+except :
+  if debug : print ( "wsio.py | I am sending an event: end" )
+  with open ( pout, "w" ) as p :
+    p.write ( "end" )
+    exit ( )
 
 s = Thread ( target = pay, args = ( ws, ))
 s.start ( )
@@ -31,7 +39,7 @@ s.start ( )
 while True :
   try :
     event = ws.recv ( )
-    print("iows.py | I am sending an event:", event )
+    if debug : print ( "wsio.py | I am sending an event:", event )
     with open ( pout, "w" ) as p :
       p.write ( event )
   except : break
@@ -42,11 +50,11 @@ while True :
 ws.close ( 1000 )
 while True :
   try :
-    print("iows.py | I am sending an event: end" )
+    if debug : print ( "wsio.py | I am sending an event: end" )
     with open ( pout, "w" ) as p :
       p.write ( "end" )
       break
   except BrokenPipeError : pass
 
 s.join ( )
-print("quittt")
+if debug : print ( "quittt" )

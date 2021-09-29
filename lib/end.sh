@@ -6,14 +6,13 @@ rm pipe/sleepid
 
 if $(cat pipe/broken)
 then
-  echo "Unexpeceted end! Sending end.."
+  if $debug; then echo "Unexpeceted end! Sending end.."; fi
   echo end > pipe/payload
 else
-  echo "Sending end.."
+  if $debug; then echo "Sending end.."; fi
   echo end > pipe/payload
-  echo "Awaiting end.."
-  while [ "$(cat pipe/event)" != "end" ]
-  do true; done
+  if $debug; then echo "Awaiting end.."; fi
+  while [ "$(cat pipe/event)" != "end" ]; do true; done
 fi
 
 rm pipe/payload

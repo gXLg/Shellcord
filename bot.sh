@@ -13,7 +13,7 @@ source lib/import.sh
 
 bot "$token"
 
-echo "logged in, probably"
+if $debug; then echo "logged in, probably"; fi
 while true
 do
   receive
