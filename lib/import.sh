@@ -1,4 +1,4 @@
-client="Shellcord alpha"
+client="Shellcord (https://github.com/gXLg/Shellcord, 1.0)"
 
 raw() {
   local txt=$(echo $*|sed 's/"/\\\"/g')
