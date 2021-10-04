@@ -12,11 +12,11 @@ No future updates in sight.
 - [x] Heartbeat automatisation and shutdown
 - [x] Ctrl-C capturing
 - [x] Login with intents
-~~ Voice gateways~~
+~~Voice gateways~~
 
-~~ v9 Gateway (will force gateway intents)~~
+~~v9 Gateway (will force gateway intents)~~
 
-~~ Sharding~~
+~~Sharding~~
 
 # Using
 The library is only able to handle messages.
