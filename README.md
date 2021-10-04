@@ -24,3 +24,5 @@ To run start it like this from your command line:
 ```sh
 token="..." bash bot.sh
 ```
+
+You may edit anything after the `if $(cat pipe/broken); then break; fi` in bot.sh

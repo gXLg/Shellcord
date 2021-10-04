@@ -33,16 +33,6 @@ do
       message="<@$author>, hello!"
       post channels/$channel/messages '{"content":"'"$message"'"}' > /dev/null
     fi
-    if [ "$cmd" == "sh!close" ]
-    then
-      if [ "$author" == "557260090621558805" ]
-      then
-        put channels/$channel/messages/$msg/reactions/📴/@me
-        break
-      else
-        post channels/$channel/messages '{"content":"Missing perms"}' > /dev/null
-      fi
-    fi
     if [ "$cmd" == "sh!status" ]
     then
       args="$(echo $content | cut -d ' ' -f 2-)"
@@ -60,29 +50,21 @@ do
         }
       }'
     fi
-    if [ "$cmd" == "sh!voice" ]
+    if [ "$cmd" == "sh!joke" ]
     then
-      payload '{
-        "op" : 4,
-        "d" : {
-          "guild_id" : "886924058460028959",
-          "channel_id" : "886924058460028963",
-          "self_mute" : false,
-          "self_deaf" : false
-        }
-      }'
-    fi
-    if [ "$cmd" == "sh!voice_x" ]
-    then
-      payload '{
-        "op" : 4,
-        "d" : {
-          "guild_id" : "886924058460028959",
-          "channel_id" : null,
-          "self_mute" : false,
-          "self_deaf" : false
-        }
-      }'
+      joke="$(curl -s https://v2.jokeapi.dev/joke/Programming)"
+      if [ "$(echo $joke | jq -r .type)" == "single" ]
+      then
+        content="$(echo $joke | jq -r .joke)"
+        content="$(raw $content)"
+        post channels/$channel/messages '{"content":"'"$content"'"}' > /dev/null
+      else
+        setup="$(echo $joke | jq -r .setup)"
+        setup="$(raw $setup)"
+        delivery="$(echo $joke | jq -r .delivery)"
+        delivery="$(raw $delivery)"
+        post channels/$channel/messages '{"content":"'"$setup"'\n||'"$delivery"'||"}' > /dev/null
+      fi
     fi
   fi
 done
