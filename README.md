@@ -1,7 +1,7 @@
 # Shellcord
 Lite discord bot library written in bash
 
-Having almost no dependencies, it's almost the fastest way to test your Discord API knowledge
+Having almost no dependencies, it's the fastest way to test your Discord API knowledge
 
 # Version
 v1.0
