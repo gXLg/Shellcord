@@ -46,7 +46,7 @@ bot() {
   then
     echo -e "ERROR: Some of the websockets exist, that may be because "\
   "an instance is running already or the programm did not clean up the file\n"\
-  "If the last, you may delete the file but proceed with caution"
+  "If the last, you may delete the file, but proceed with caution"
     exit 1
   fi
   if [ -f "pipe/payload" ] || [ -f "pipe/event" ]
@@ -57,6 +57,8 @@ bot() {
   mkfifo pipe/payload
   mkfifo pipe/event
   python lib/wsio.py "wss://gateway.discord.gg/?v=6&encoding=json" pipe/payload pipe/event &
+
+  sequence=null
 
   event=$(cat pipe/event)
   if [ "$event" == "end" ]
@@ -74,7 +76,7 @@ bot() {
     sleepid=$!
     echo $sleepid > pipe/sleepid
     wait $sleepid
-    echo '{"op":1,"d":null}' > pipe/payload
+    echo '{"op":1,"d":'$sequence'}' > pipe/payload
   done)&
   echo $! > pipe/loopid
 
@@ -92,10 +94,26 @@ payload() {
 
 receive() {
   event="$(cat pipe/event)"
+  if [ "$(echo $event | jq -r .s)" != null ]
+  then
+    sequence=$(echo $event | jq -r .s)
+  fi
+  echo false > pipe/broken
   if [ "$event" == "end" ]
   then
     echo true > pipe/broken
-  else
-    echo false > pipe/broken
+  elif [ "$(echo $event | jq -r .t)" == "READY" ]
+  then
+    session_id=$(echo $event | jq -r .d.session_id)
+  elif [ "$(echo $event | jq -r .op)" == 7 ]
+  then
+    payload '{
+      "op": 6,
+      "d": {
+        "token": "'"$token"'",
+        "session_id": "'"$session_id"'",
+        "seq": '$sequence'
+      }
+    }'
   fi
 }
