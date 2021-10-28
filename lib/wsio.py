@@ -18,7 +18,8 @@ def pay ( ws ) :
       payload = p.read ( )
     if debug : print ( "wsio.py | I received a payload:", payload )
     if payload == "end\n" :
-      ws.send ( '{"op":1,"d":null}' )
+      if ws.connected :
+        ws.send ( '{"op":1,"d":null}' )
       trigger = True
       break
     else :
@@ -42,9 +43,18 @@ while True :
     if debug : print ( "wsio.py | I am sending an event:", event )
     with open ( pout, "w" ) as p :
       p.write ( event )
-  except : break
-  if not ws.connected : break
-  if trigger : break
+  except : pass
+  if not ws.connected :
+    while True :
+      try :
+        if debug : print ( "wsio.py | I am sending an event: reconnect" )
+        with open ( pout, "w" ) as p :
+          p.write ( "reconnect" )
+        s.join ( )
+        if debug : print ( "quit for recon" )
+        exit ( )
+      except BrokenPipeError : pass
+  elif trigger : break
 
 
 ws.close ( 1000 )

@@ -65,6 +65,7 @@ bot() {
   then
     rm pipe/payload
     rm pipe/event
+    $debug && echo "Unknown error on first connection"
     exit 1
   fi
   interval=$(echo $event | jq .d.heartbeat_interval )
@@ -80,11 +81,13 @@ bot() {
   done)&
   echo $! > pipe/loopid
 
-  if [ "$2" == "" ]
+  token="$1"
+  intents="$2"
+  if [ "$intents" == "" ]
   then
-    echo '{"op":2,"d":{"token":"'$1'","properties":{"$os":"linux","$browser":"'"${client}"'","$device":"calculator"}}}' > pipe/payload
+    echo '{"op":2,"d":{"token":"'$token'","properties":{"$os":"linux","$browser":"'"$client"'","$device":"calculator"}}}' > pipe/payload
   else
-    echo '{"op":2,"d":{"token":"'$1'","intents":'$2',"properties":{"$os":"linux","$browser":"'"${client}"'","$device":"calculator"}}}' > pipe/payload
+    echo '{"op":2,"d":{"token":"'$token'","intents":'$intents',"properties":{"$os":"linux","$browser":"'"$client"'","$device":"calculator"}}}' > pipe/payload
   fi
 }
 
@@ -94,19 +97,42 @@ payload() {
 
 receive() {
   event="$(cat pipe/event)"
-  if [ "$(echo $event | jq -r .s)" != null ]
-  then
-    sequence=$(echo $event | jq -r .s)
-  fi
   echo false > pipe/broken
   if [ "$event" == "end" ]
   then
     echo true > pipe/broken
-  elif [ "$(echo $event | jq -r .t)" == "READY" ]
+  elif [ "$event" == "reconnect" ]
   then
-    session_id=$(echo $event | jq -r .d.session_id)
-  elif [ "$(echo $event | jq -r .op)" == 7 ]
-  then
+    $debug && echo "Reconnecting..."
+    kill $(cat pipe/loopid)
+    rm pipe/loopid
+    kill $(cat pipe/sleepid)
+    rm pipe/sleepid
+    echo end > pipe/payload
+
+    python lib/wsio.py "wss://gateway.discord.gg/?v=6&encoding=json" pipe/payload pipe/event &
+
+    event=$(cat pipe/event)
+    if [ "$event" == "end" ]
+    then
+      rm pipe/payload
+      rm pipe/event
+      $debug && echo "Unknown error on first connection"
+      exit 1
+    fi
+    interval=$(echo $event | jq .d.heartbeat_interval )
+    interval=$(echo "scale=2; $interval / 1000" | bc )
+
+    (while true
+    do
+      sleep $interval &
+      sleepid=$!
+      echo $sleepid > pipe/sleepid
+      wait $sleepid
+      echo '{"op":1,"d":'$sequence'}' > pipe/payload
+    done)&
+    echo $! > pipe/loopid
+
     payload '{
       "op": 6,
       "d": {
@@ -115,5 +141,33 @@ receive() {
         "seq": '$sequence'
       }
     }'
+
+    receive
+  else
+
+    if [ "$(echo $event | jq -r .s)" != null ]
+    then
+      sequence=$(echo $event | jq -r .s)
+    elif [ ! "$sequence" ]
+    then
+      sequence=null
+    fi
+    $debug && echo "Event sequence: $sequence ($(echo $event | jq -r .t))"
+
+    if [ "$(echo $event | jq -r .t)" == "READY" ]
+    then
+      session_id=$(echo $event | jq -r .d.session_id)
+    elif [ "$(echo $event | jq -r .op)" == 7 ]
+    then
+      true
+#      payload '{
+#        "op": 6,
+#        "d": {
+#          "token": "'"$token"'",
+#          "session_id": "'"$session_id"'",
+#          "seq": '$sequence'
+#        }
+#      }'
+    fi
   fi
 }

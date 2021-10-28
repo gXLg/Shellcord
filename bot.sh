@@ -28,12 +28,14 @@ do
     msg="$(echo $event | jq -r .d.id)"
     channel="$(echo $event | jq -r .d.channel_id)"
 
-    if [ "$cmd" == "sh!hi" ]
+    if [ "$cmd" == "sh!crash" ]
+    then
+      payload '{}'
+    elif [ "$cmd" == "sh!hi" ]
     then
       message="<@$author>, hello!"
       post channels/$channel/messages '{"content":"'"$message"'"}' > /dev/null
-    fi
-    if [ "$cmd" == "sh!status" ]
+    elif [ "$cmd" == "sh!status" ]
     then
       args="$(echo $content | cut -d ' ' -f 2-)"
       args="$(raw $args)"
@@ -49,8 +51,7 @@ do
           }]
         }
       }'
-    fi
-    if [ "$cmd" == "sh!joke" ]
+    elif [ "$cmd" == "sh!joke" ]
     then
       joke="$(curl -s https://v2.jokeapi.dev/joke/Programming)"
       if [ "$(echo $joke | jq -r .type)" == "single" ]
